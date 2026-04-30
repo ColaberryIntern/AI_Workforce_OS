@@ -43,6 +43,15 @@ describe('public routes', () => {
     expect(areas).toContain('recommendations');
     expect(areas).toContain('forecasting');
     expect(areas).toContain('alerting');
+    // Subscription / commercial surfaces
+    expect(areas).toContain('subscription-tiers');
+    expect(areas).toContain('add-ons');
+    expect(areas).toContain('events');
+    expect(areas).toContain('consulting-services');
+    expect(areas).toContain('training-programs');
+    expect(areas).toContain('marketing-channels');
+    expect(areas).toContain('partnerships');
+    expect(areas).toContain('competitor-insights');
   });
 
   it('POST /api/services → returns service catalog', async () => {
@@ -68,6 +77,30 @@ describe('auth gates', () => {
     const res = await request(app).post('/api/auth/login').send({ email: 'not-an-email', password: '' });
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  // --- Subscription / commercial gates ---
+
+  it('GET /api/competitor-insights without auth → 401 (internal endpoint)', async () => {
+    const res = await request(app).get('/api/competitor-insights');
+    expect(res.status).toBe(401);
+  });
+
+  it('GET /api/marketing-channels without auth → 401 (internal endpoint)', async () => {
+    const res = await request(app).get('/api/marketing-channels');
+    expect(res.status).toBe(401);
+  });
+
+  it('GET /api/partnerships without auth → 401 (internal endpoint)', async () => {
+    const res = await request(app).get('/api/partnerships');
+    expect(res.status).toBe(401);
+  });
+
+  it('POST /api/subscription-tiers without auth → 401 (mutation)', async () => {
+    const res = await request(app)
+      .post('/api/subscription-tiers')
+      .send({ key: 'test', name: 'Test', monthlyPriceCents: 100 });
+    expect(res.status).toBe(401);
   });
 });
 

@@ -322,6 +322,331 @@ async function upsertCompetitiveGaps() {
   }
 }
 
+// =============================================================================
+// Subscription / commercial seed (Build Guide §1 §Business Model + §10 GTM)
+// Spec: /directives/subscription_tiers.md
+// =============================================================================
+
+const SUBSCRIPTION_TIERS = [
+  {
+    key: 'basic',
+    name: 'Basic',
+    description: 'Core features for small organizations.',
+    monthlyPriceCents: 2900,
+    yearlyPriceCents: 29_000,
+    features: [
+      'Role management',
+      'Basic AI recommendations',
+      'Standard reporting',
+      'Email support',
+    ],
+    orderIndex: 0,
+    isActive: true,
+  },
+  {
+    key: 'professional',
+    name: 'Professional',
+    description: 'Advanced AI, analytics, and API access for mid-sized teams.',
+    monthlyPriceCents: 7900,
+    yearlyPriceCents: 79_000,
+    features: [
+      'Everything in Basic',
+      'Advanced AI recommendations',
+      'Usage analytics',
+      'API access',
+      'Webhooks',
+    ],
+    orderIndex: 1,
+    isActive: true,
+  },
+  {
+    key: 'enterprise',
+    name: 'Enterprise',
+    description: 'Full platform with dedicated support and custom integrations.',
+    monthlyPriceCents: 14_900,
+    yearlyPriceCents: 149_000,
+    features: [
+      'Everything in Professional',
+      'Performance monitoring',
+      'Time-series forecasting',
+      'Dedicated support',
+      'Custom integrations',
+    ],
+    orderIndex: 2,
+    isActive: true,
+  },
+];
+
+const ADD_ONS = [
+  {
+    name: 'Advanced analytics pack',
+    description: 'Deeper engagement metrics, retention curves, cohort analysis.',
+    monthlyPriceCents: 4900,
+    applicableTierKeys: ['professional', 'enterprise'],
+    orderIndex: 0,
+  },
+  {
+    name: 'Custom reporting',
+    description: 'Build and schedule custom reports with white-label exports.',
+    monthlyPriceCents: 9900,
+    applicableTierKeys: ['professional', 'enterprise'],
+    orderIndex: 1,
+  },
+  {
+    name: 'Priority support',
+    description: '4-hour SLA, dedicated success manager.',
+    monthlyPriceCents: 19_900,
+    applicableTierKeys: ['enterprise'],
+    orderIndex: 2,
+  },
+];
+
+const MARKETING_CHANNELS = [
+  {
+    name: 'LinkedIn organic',
+    channelType: 'social',
+    targetAudience: 'hr_manager',
+    status: 'active',
+    notes: 'Weekly thought-leadership posts targeting HR decision-makers.',
+    orderIndex: 0,
+  },
+  {
+    name: 'SEO — workforce-management long-tail',
+    channelType: 'seo',
+    targetAudience: 'sme',
+    status: 'active',
+    notes: 'Mid-funnel keywords ("ai workforce planning", "shift forecasting"). Updated quarterly.',
+    orderIndex: 1,
+  },
+  {
+    name: 'Content — case-studies and whitepapers',
+    channelType: 'content',
+    targetAudience: 'executive',
+    status: 'active',
+    notes: 'Quarterly executive-targeted whitepapers + customer case studies.',
+    orderIndex: 2,
+  },
+];
+
+const PARTNERSHIPS = [
+  {
+    name: 'Allegis Group',
+    partnerType: 'consulting_firm',
+    status: 'prospect',
+    contactName: 'Strategic Partnerships',
+    contactEmail: 'partnerships@allegis.example',
+    agreementNotes: 'Initial outreach for HR consulting referral program.',
+  },
+  {
+    name: 'SHRM (Society for Human Resource Management)',
+    partnerType: 'industry_association',
+    status: 'prospect',
+    contactName: 'Marketplace Team',
+    contactEmail: 'marketplace@shrm.example',
+    agreementNotes: 'Targeting SHRM marketplace listing for credibility + reach.',
+  },
+];
+
+const EVENTS = [
+  {
+    title: 'AI Workforce OS — product overview',
+    eventType: 'webinar',
+    description: 'Demo of forecasting, recommendations, and dynamic scheduling.',
+    scheduledAt: new Date(Date.now() + 14 * 86_400_000),
+    durationMinutes: 60,
+    status: 'scheduled',
+  },
+  {
+    title: 'Live demo: dynamic shift allocation',
+    eventType: 'demo',
+    description: 'Walk-through of demand forecasting and AI-driven schedule adjustments.',
+    scheduledAt: new Date(Date.now() + 7 * 86_400_000),
+    durationMinutes: 30,
+    status: 'scheduled',
+  },
+];
+
+const CONSULTING_SERVICES = [
+  {
+    name: 'HR transformation diagnostic',
+    description:
+      'Two-week engagement assessing current staffing pain points and modeling AI-driven improvements.',
+    pricingModel: 'project',
+    audience: 'hr_manager',
+    orderIndex: 0,
+  },
+  {
+    name: 'Implementation services',
+    description:
+      'Hands-on configuration of role hierarchies, integrations, and AI baselines for your environment.',
+    pricingModel: 'hourly',
+    audience: 'it_admin',
+    orderIndex: 1,
+  },
+];
+
+const TRAINING_PROGRAMS = [
+  {
+    title: 'Platform fundamentals',
+    description: 'Self-paced introduction to AI Workforce OS for HR managers and analysts.',
+    format: 'self_paced',
+    durationHours: 4,
+    level: 'intro',
+    audience: 'hr_manager',
+    orderIndex: 0,
+  },
+  {
+    title: 'Operations master class',
+    description: 'Live blended training for operations leaders deploying dynamic scheduling.',
+    format: 'blended',
+    durationHours: 12,
+    level: 'intermediate',
+    audience: 'operations',
+    orderIndex: 1,
+  },
+];
+
+// Per-competitor strengths and weaknesses — Build Guide §1 §Competitive Landscape
+const COMPETITOR_INSIGHTS: Array<{
+  competitorName: string;
+  kind: 'strength' | 'weakness' | 'opportunity' | 'threat';
+  summary: string;
+  detail?: string;
+  orderIndex: number;
+}> = [
+  {
+    competitorName: 'Kronos',
+    kind: 'strength',
+    summary: 'Established brand and customer loyalty in workforce management.',
+    detail: 'Decades of enterprise market share; deeply embedded in compliance-heavy industries.',
+    orderIndex: 0,
+  },
+  {
+    competitorName: 'Kronos',
+    kind: 'weakness',
+    summary: 'High pricing and complex UI deter SMEs.',
+    detail: 'Implementations take months; heavy training overhead for end users.',
+    orderIndex: 1,
+  },
+  {
+    competitorName: 'ShiftPixy',
+    kind: 'strength',
+    summary: 'Strong gig-economy positioning and flexible staffing model.',
+    orderIndex: 0,
+  },
+  {
+    competitorName: 'ShiftPixy',
+    kind: 'weakness',
+    summary: 'Limited features for traditional workforce management.',
+    orderIndex: 1,
+  },
+  {
+    competitorName: 'WorkFusion',
+    kind: 'strength',
+    summary: 'Advanced AI capabilities for workforce optimization.',
+    orderIndex: 0,
+  },
+  {
+    competitorName: 'Deputy',
+    kind: 'weakness',
+    summary: 'Limited AI capabilities and weak real-time data integration.',
+    orderIndex: 0,
+  },
+];
+
+async function upsertSubscriptionTiers() {
+  for (const t of SUBSCRIPTION_TIERS) {
+    await prisma.subscriptionTier.upsert({
+      where: { key: t.key },
+      create: t,
+      update: t,
+    });
+  }
+}
+
+async function upsertAddOns() {
+  for (const a of ADD_ONS) {
+    await prisma.addOn.upsert({
+      where: { name: a.name },
+      create: a,
+      update: a,
+    });
+  }
+}
+
+async function upsertMarketingChannels() {
+  for (const m of MARKETING_CHANNELS) {
+    await prisma.marketingChannel.upsert({
+      where: { name: m.name },
+      create: m,
+      update: m,
+    });
+  }
+}
+
+async function upsertPartnerships() {
+  for (const p of PARTNERSHIPS) {
+    await prisma.partnership.upsert({
+      where: { name: p.name },
+      create: p,
+      update: p,
+    });
+  }
+}
+
+async function upsertEvents() {
+  for (const e of EVENTS) {
+    const existing = await prisma.event.findFirst({ where: { title: e.title } });
+    if (existing) {
+      await prisma.event.update({ where: { id: existing.id }, data: e });
+    } else {
+      await prisma.event.create({ data: e });
+    }
+  }
+}
+
+async function upsertConsultingServices() {
+  for (const c of CONSULTING_SERVICES) {
+    await prisma.consultingService.upsert({
+      where: { name: c.name },
+      create: c,
+      update: c,
+    });
+  }
+}
+
+async function upsertTrainingPrograms() {
+  for (const t of TRAINING_PROGRAMS) {
+    await prisma.trainingProgram.upsert({
+      where: { title: t.title },
+      create: t,
+      update: t,
+    });
+  }
+}
+
+async function upsertCompetitorInsights() {
+  for (const ci of COMPETITOR_INSIGHTS) {
+    const competitor = await prisma.competitor.findUnique({ where: { name: ci.competitorName } });
+    if (!competitor) continue;
+    const existing = await prisma.competitorInsight.findFirst({
+      where: { competitorId: competitor.id, kind: ci.kind, summary: ci.summary },
+    });
+    const data = {
+      competitorId: competitor.id,
+      kind: ci.kind,
+      summary: ci.summary,
+      detail: ci.detail ?? null,
+      orderIndex: ci.orderIndex,
+    };
+    if (existing) {
+      await prisma.competitorInsight.update({ where: { id: existing.id }, data });
+    } else {
+      await prisma.competitorInsight.create({ data });
+    }
+  }
+}
+
 async function main(): Promise<void> {
   await upsertPermissions();
   await upsertRoles();
@@ -329,6 +654,16 @@ async function main(): Promise<void> {
   await upsertValuePropositions();
   await upsertMatrix();
   await upsertCompetitiveGaps();
+
+  // Subscription / commercial
+  await upsertSubscriptionTiers();
+  await upsertAddOns();
+  await upsertMarketingChannels();
+  await upsertPartnerships();
+  await upsertEvents();
+  await upsertConsultingServices();
+  await upsertTrainingPrograms();
+  await upsertCompetitorInsights();
 
   // eslint-disable-next-line no-console
   console.error(`Seed complete. Admin: ${admin.email} / ${admin.password}`);

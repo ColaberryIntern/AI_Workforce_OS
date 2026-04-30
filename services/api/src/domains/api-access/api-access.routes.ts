@@ -180,6 +180,94 @@ const CATALOG = {
         { method: 'GET', path: '/api/health/ready', auth: 'public' },
       ],
     },
+    {
+      area: 'subscription-tiers',
+      directive: '/directives/subscription_tiers.md',
+      endpoints: [
+        { method: 'GET', path: '/api/subscription-tiers', auth: 'public' },
+        { method: 'GET', path: '/api/subscription-tiers/:id', auth: 'public' },
+        { method: 'POST', path: '/api/subscription-tiers', auth: 'content.write' },
+        { method: 'PATCH', path: '/api/subscription-tiers/:id', auth: 'content.write' },
+        { method: 'DELETE', path: '/api/subscription-tiers/:id', auth: 'content.write' },
+      ],
+    },
+    {
+      area: 'add-ons',
+      directive: '/directives/subscription_tiers.md',
+      endpoints: [
+        { method: 'GET', path: '/api/add-ons', auth: 'public' },
+        { method: 'GET', path: '/api/add-ons/:id', auth: 'public' },
+        { method: 'POST', path: '/api/add-ons', auth: 'content.write' },
+        { method: 'PATCH', path: '/api/add-ons/:id', auth: 'content.write' },
+        { method: 'DELETE', path: '/api/add-ons/:id', auth: 'content.write' },
+      ],
+    },
+    {
+      area: 'events',
+      directive: '/directives/subscription_tiers.md',
+      endpoints: [
+        { method: 'GET', path: '/api/events', auth: 'public' },
+        { method: 'GET', path: '/api/events/:id', auth: 'public' },
+        { method: 'POST', path: '/api/events', auth: 'content.write' },
+        { method: 'PATCH', path: '/api/events/:id', auth: 'content.write' },
+        { method: 'DELETE', path: '/api/events/:id', auth: 'content.write' },
+      ],
+    },
+    {
+      area: 'consulting-services',
+      directive: '/directives/subscription_tiers.md',
+      endpoints: [
+        { method: 'GET', path: '/api/consulting-services', auth: 'public' },
+        { method: 'GET', path: '/api/consulting-services/:id', auth: 'public' },
+        { method: 'POST', path: '/api/consulting-services', auth: 'content.write' },
+        { method: 'PATCH', path: '/api/consulting-services/:id', auth: 'content.write' },
+        { method: 'DELETE', path: '/api/consulting-services/:id', auth: 'content.write' },
+      ],
+    },
+    {
+      area: 'training-programs',
+      directive: '/directives/subscription_tiers.md',
+      endpoints: [
+        { method: 'GET', path: '/api/training-programs', auth: 'public' },
+        { method: 'GET', path: '/api/training-programs/:id', auth: 'public' },
+        { method: 'POST', path: '/api/training-programs', auth: 'content.write' },
+        { method: 'PATCH', path: '/api/training-programs/:id', auth: 'content.write' },
+        { method: 'DELETE', path: '/api/training-programs/:id', auth: 'content.write' },
+      ],
+    },
+    {
+      area: 'marketing-channels',
+      directive: '/directives/subscription_tiers.md',
+      endpoints: [
+        { method: 'GET', path: '/api/marketing-channels', auth: 'requireAuth' },
+        { method: 'GET', path: '/api/marketing-channels/:id', auth: 'requireAuth' },
+        { method: 'POST', path: '/api/marketing-channels', auth: 'content.write' },
+        { method: 'PATCH', path: '/api/marketing-channels/:id', auth: 'content.write' },
+        { method: 'DELETE', path: '/api/marketing-channels/:id', auth: 'content.write' },
+      ],
+    },
+    {
+      area: 'partnerships',
+      directive: '/directives/subscription_tiers.md',
+      endpoints: [
+        { method: 'GET', path: '/api/partnerships', auth: 'requireAuth' },
+        { method: 'GET', path: '/api/partnerships/:id', auth: 'requireAuth' },
+        { method: 'POST', path: '/api/partnerships', auth: 'content.write' },
+        { method: 'PATCH', path: '/api/partnerships/:id', auth: 'content.write' },
+        { method: 'DELETE', path: '/api/partnerships/:id', auth: 'content.write' },
+      ],
+    },
+    {
+      area: 'competitor-insights',
+      directive: '/directives/subscription_tiers.md',
+      endpoints: [
+        { method: 'GET', path: '/api/competitor-insights', auth: 'requireAuth' },
+        { method: 'GET', path: '/api/competitor-insights/:id', auth: 'requireAuth' },
+        { method: 'POST', path: '/api/competitor-insights', auth: 'content.write' },
+        { method: 'PATCH', path: '/api/competitor-insights/:id', auth: 'content.write' },
+        { method: 'DELETE', path: '/api/competitor-insights/:id', auth: 'content.write' },
+      ],
+    },
   ],
 };
 

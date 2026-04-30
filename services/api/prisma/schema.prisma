@@ -384,7 +384,8 @@ model Competitor {
   isOwn      Boolean  @default(false)
   orderIndex Int      @default(0)
 
-  cells MatrixCell[]
+  cells    MatrixCell[]
+  insights CompetitorInsight[]
 
   @@map("competitors")
 }
@@ -412,3 +413,136 @@ model CompetitiveGap {
 
   @@map("competitive_gaps")
 }
+
+// =============================================================================
+// Subscription & Commercial (Build Guide §1 Business Model + §10 GTM)
+// Spec: /directives/subscription_tiers.md
+// =============================================================================
+
+model SubscriptionTier {
+  id               String   @id @default(cuid())
+  key              String   @unique // 'basic' | 'professional' | 'enterprise' | ...
+  name             String
+  description      String?
+  monthlyPriceCents Int
+  yearlyPriceCents Int?
+  features         String[] // bullet list shown on the marketing site
+  orderIndex       Int      @default(0)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("subscription_tiers")
+}
+
+model AddOn {
+  id                String   @id @default(cuid())
+  name              String   @unique
+  description       String
+  monthlyPriceCents Int
+  applicableTierKeys String[] // tier keys this add-on can attach to
+  isActive          Boolean  @default(true)
+  orderIndex        Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([isActive, orderIndex])
+  @@map("add_ons")
+}
+
+model MarketingChannel {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  channelType   String   // 'seo' | 'content' | 'social' | 'paid' | 'email' | 'event'
+  targetAudience String  // 'hr_manager' | 'operations' | 'it_admin' | 'executive' | 'sme' | 'enterprise'
+  status        String   @default("active") // 'active' | 'paused' | 'archived'
+  notes         String?
+  orderIndex    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([channelType, status])
+  @@map("marketing_channels")
+}
+
+model Partnership {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  partnerType  String   // 'consulting_firm' | 'industry_association' | 'reseller' | 'tech_partner'
+  status       String   @default("prospect") // 'prospect' | 'active' | 'paused' | 'ended'
+  contactName  String?
+  contactEmail String?
+  agreementNotes String?
+  startedAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([partnerType, status])
+  @@map("partnerships")
+}
+
+model Event {
+  id              String   @id @default(cuid())
+  title           String
+  eventType       String   // 'webinar' | 'demo' | 'workshop' | 'conference'
+  description     String?
+  scheduledAt     DateTime
+  durationMinutes Int      @default(60)
+  registrationUrl String?
+  recordingUrl    String?
+  status          String   @default("scheduled") // 'scheduled' | 'live' | 'completed' | 'cancelled'
+  attendeeCount   Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([eventType, scheduledAt])
+  @@index([status, scheduledAt])
+  @@map("events")
+}
+
+model ConsultingService {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  description  String
+  pricingModel String   // 'hourly' | 'project' | 'retainer'
+  audience     String?  // optional persona target
+  isActive     Boolean  @default(true)
+  orderIndex   Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("consulting_services")
+}
+
+model TrainingProgram {
+  id            String   @id @default(cuid())
+  title         String   @unique
+  description   String
+  format        String   // 'live' | 'self_paced' | 'blended'
+  durationHours Int
+  level         String   // 'intro' | 'intermediate' | 'advanced'
+  audience      String?
+  isActive      Boolean  @default(true)
+  orderIndex    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([format, level])
+  @@map("training_programs")
+}
+
+model CompetitorInsight {
+  id           String   @id @default(cuid())
+  competitorId String
+  competitor   Competitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+  kind         String   // 'strength' | 'weakness' | 'opportunity' | 'threat'
+  summary      String
+  detail       String?
+  orderIndex   Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([competitorId, kind])
+  @@map("competitor_insights")
+}
+
