@@ -25,6 +25,7 @@ const groups: NavGroup[] = [
     label: 'Insights',
     items: [
       { to: '/executive-dashboard', label: 'Executive view' },
+      { to: '/milestones', label: 'Milestones', permission: 'milestone.read' },
       { to: '/value-proposition', label: 'Value proposition' },
     ],
   },

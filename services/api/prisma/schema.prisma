@@ -546,3 +546,27 @@ model CompetitorInsight {
   @@map("competitor_insights")
 }
 
+// =============================================================================
+// Milestones (Build Guide §10 §Milestone Definitions)
+// Spec: /directives/milestones.md
+// =============================================================================
+
+model Milestone {
+  id           String    @id @default(cuid())
+  phase        Int                              // 1..4 (Build Guide §10)
+  code         String    @unique                // '1.1', '2.3', etc.
+  title        String
+  description  String?
+  criteria     String?                          // success criteria
+  deliverables String?                          // expected deliverables
+  dueDate      DateTime?
+  status       String    @default("planned")    // 'planned' | 'in_progress' | 'done' | 'at_risk' | 'skipped'
+  completedAt  DateTime?
+  orderIndex   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([phase, orderIndex])
+  @@index([status, dueDate])
+  @@map("milestones")
+}

@@ -38,3 +38,4 @@ Source spec: [`../AI_Workforce_Operating_System_Build_Guide_v1.md`](../AI_Workfo
 - [value_proposition.md](value_proposition.md) — content service
 - [auth.md](auth.md) — authentication (login/register/refresh)
 - [subscription_tiers.md](subscription_tiers.md) — subscription tiers, add-ons, marketing channels, partnerships, events, consulting/training, competitor insights
+- [milestones.md](milestones.md) — project delivery milestones across phases (Build Guide §10)

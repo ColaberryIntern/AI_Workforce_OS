@@ -13,6 +13,7 @@ import { RolesPage } from './pages/RolesPage';
 import { AuditPage } from './pages/AuditPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { WebhooksPage } from './pages/WebhooksPage';
+import { MilestonesPage } from './pages/MilestonesPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 export default function App() {
@@ -85,6 +86,14 @@ export default function App() {
           element={
             <RequireAuth permission="webhook.read">
               <WebhooksPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/milestones"
+          element={
+            <RequireAuth permission="milestone.read">
+              <MilestonesPage />
             </RequireAuth>
           }
         />

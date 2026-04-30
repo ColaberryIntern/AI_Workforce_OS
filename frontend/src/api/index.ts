@@ -133,3 +133,78 @@ export const health = {
   check: () =>
     apiFetch<{ status: string; db: string; uptimeSeconds: number; version: string }>('/health'),
 };
+
+export type MilestoneStatus = 'planned' | 'in_progress' | 'done' | 'at_risk' | 'skipped';
+
+export interface MilestoneRow {
+  id: string;
+  phase: number;
+  code: string;
+  title: string;
+  description: string | null;
+  criteria: string | null;
+  deliverables: string | null;
+  dueDate: string | null;
+  status: MilestoneStatus;
+  completedAt: string | null;
+  orderIndex: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MilestoneSummary {
+  total: number;
+  done: number;
+  inProgress: number;
+  atRisk: number;
+  donePct: number;
+  phases: Array<{
+    phase: number;
+    total: number;
+    planned: number;
+    in_progress: number;
+    done: number;
+    at_risk: number;
+    skipped: number;
+  }>;
+}
+
+export interface MilestoneCreateInput {
+  phase: number;
+  code: string;
+  title: string;
+  description?: string | null;
+  criteria?: string | null;
+  deliverables?: string | null;
+  dueDate?: string | null;
+  status?: MilestoneStatus;
+  orderIndex?: number;
+}
+
+export const milestones = {
+  list: (params: { phase?: number; status?: MilestoneStatus } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.phase !== undefined) qs.set('phase', String(params.phase));
+    if (params.status) qs.set('status', params.status);
+    const suffix = qs.toString() ? `?${qs}` : '';
+    return apiFetch<MilestoneRow[]>(`/milestones${suffix}`);
+  },
+  summary: () => apiFetch<MilestoneSummary>('/milestones/summary'),
+  get: (id: string) => apiFetch<MilestoneRow>(`/milestones/${id}`),
+  create: (input: MilestoneCreateInput) =>
+    apiFetch<MilestoneRow>('/milestones', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  update: (id: string, input: Partial<MilestoneCreateInput>) =>
+    apiFetch<MilestoneRow>(`/milestones/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    }),
+  transition: (id: string, status: MilestoneStatus) =>
+    apiFetch<MilestoneRow>(`/milestones/${id}/transition`, {
+      method: 'POST',
+      body: JSON.stringify({ status }),
+    }),
+  delete: (id: string) => apiFetch<void>(`/milestones/${id}`, { method: 'DELETE' }),
+};

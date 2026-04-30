@@ -38,6 +38,9 @@ const PERMISSIONS = [
   // Content
   { key: 'content.read', description: 'Read value-prop / matrix / gap content' },
   { key: 'content.write', description: 'Edit value-prop / matrix / gap content' },
+  // Project delivery
+  { key: 'milestone.read', description: 'Read project milestones' },
+  { key: 'milestone.write', description: 'Manage project milestones' },
 ];
 
 const ROLES = [
@@ -62,6 +65,8 @@ const ROLES = [
       'analytics.read',
       'monitoring.read',
       'content.read',
+      'milestone.read',
+      'milestone.write',
     ],
   },
   {
@@ -74,6 +79,7 @@ const ROLES = [
       'notification.read',
       'analytics.read',
       'content.read',
+      'milestone.read',
     ],
   },
 ];
@@ -625,6 +631,159 @@ async function upsertTrainingPrograms() {
   }
 }
 
+// =============================================================================
+// Milestones (Build Guide §10 §Milestone Definitions)
+// =============================================================================
+
+const MILESTONES = [
+  // Phase 1
+  {
+    phase: 1,
+    code: '1.1',
+    title: 'Completion of Role Management System',
+    description: 'Role hierarchy, RBAC, and permission CRUD ready for production.',
+    criteria: 'Role management system is fully functional and tested.',
+    deliverables: 'Code repository with role management features.',
+    dueDate: new Date(Date.now() + 14 * 86_400_000),
+    status: 'planned',
+    orderIndex: 0,
+  },
+  {
+    phase: 1,
+    code: '1.2',
+    title: 'Initial AI Recommendations',
+    description: 'First version of the recommender + AI Recommendations endpoint.',
+    criteria: 'AI recommendation engine provides basic staffing suggestions.',
+    deliverables: 'API endpoint for recommendations.',
+    dueDate: new Date(Date.now() + 30 * 86_400_000),
+    status: 'planned',
+    orderIndex: 1,
+  },
+  {
+    phase: 1,
+    code: '1.3',
+    title: 'MVP Deployment',
+    description: 'Deploy to staging for pilot HR managers.',
+    criteria: 'MVP is deployed to a select group of users for feedback.',
+    deliverables: 'User feedback report and identified areas for improvement.',
+    dueDate: new Date(Date.now() + 90 * 86_400_000),
+    status: 'planned',
+    orderIndex: 2,
+  },
+  // Phase 2
+  {
+    phase: 2,
+    code: '2.1',
+    title: 'Webhook Integration',
+    description: 'Webhook delivery + HMAC + retries.',
+    criteria: 'Webhook system is operational and tested with external services.',
+    deliverables: 'Documentation for webhook configuration.',
+    dueDate: new Date(Date.now() + 120 * 86_400_000),
+    status: 'planned',
+    orderIndex: 0,
+  },
+  {
+    phase: 2,
+    code: '2.2',
+    title: 'Analytics Dashboard',
+    description: 'Usage analytics + executive view.',
+    criteria: 'Usage analytics dashboard is live and tracking user engagement.',
+    deliverables: 'Dashboard access for HR managers.',
+    dueDate: new Date(Date.now() + 150 * 86_400_000),
+    status: 'planned',
+    orderIndex: 1,
+  },
+  {
+    phase: 2,
+    code: '2.3',
+    title: 'User Testing Completion',
+    description: 'Expanded user testing wave for the MVP.',
+    criteria: 'Feedback from expanded user testing is collected and analyzed.',
+    deliverables: 'User feedback report with actionable insights.',
+    dueDate: new Date(Date.now() + 180 * 86_400_000),
+    status: 'planned',
+    orderIndex: 2,
+  },
+  // Phase 3
+  {
+    phase: 3,
+    code: '3.1',
+    title: 'APM Integration',
+    description: 'Performance monitoring vendor wired in.',
+    criteria: 'APM tools are integrated and monitoring system performance.',
+    deliverables: 'Performance monitoring reports.',
+    dueDate: new Date(Date.now() + 210 * 86_400_000),
+    status: 'planned',
+    orderIndex: 0,
+  },
+  {
+    phase: 3,
+    code: '3.2',
+    title: 'Algorithm Optimization',
+    description: 'Tune recommender + forecaster from production feedback.',
+    criteria: 'AI recommendation algorithms are optimized based on performance data.',
+    deliverables: 'Updated algorithms and performance metrics.',
+    dueDate: new Date(Date.now() + 240 * 86_400_000),
+    status: 'planned',
+    orderIndex: 1,
+  },
+  {
+    phase: 3,
+    code: '3.3',
+    title: 'Documentation Completion',
+    description: 'User manuals + API + ops runbooks.',
+    criteria: 'Comprehensive documentation for system performance and usage is finalized.',
+    deliverables: 'User manuals and technical documentation.',
+    dueDate: new Date(Date.now() + 270 * 86_400_000),
+    status: 'planned',
+    orderIndex: 2,
+  },
+  // Phase 4
+  {
+    phase: 4,
+    code: '4.1',
+    title: 'Marketing Materials Ready',
+    description: 'Launch collateral, case studies, onboarding guides.',
+    criteria: 'All marketing materials and user guides are prepared for launch.',
+    deliverables: 'Marketing collateral and user onboarding materials.',
+    dueDate: new Date(Date.now() + 300 * 86_400_000),
+    status: 'planned',
+    orderIndex: 0,
+  },
+  {
+    phase: 4,
+    code: '4.2',
+    title: 'Infrastructure Scaling Completed',
+    description: 'Cluster + DB capacity scaled for launch traffic.',
+    criteria: 'Cloud infrastructure is scaled to support increased user load.',
+    deliverables: 'Infrastructure setup documentation.',
+    dueDate: new Date(Date.now() + 330 * 86_400_000),
+    status: 'planned',
+    orderIndex: 1,
+  },
+  {
+    phase: 4,
+    code: '4.3',
+    title: 'Official Product Launch',
+    description: 'Public launch + monitor adoption.',
+    criteria: 'Product is officially launched and user adoption is monitored.',
+    deliverables: 'Launch report and initial user feedback.',
+    dueDate: new Date(Date.now() + 365 * 86_400_000),
+    status: 'planned',
+    orderIndex: 2,
+  },
+];
+
+async function upsertMilestones() {
+  for (const m of MILESTONES) {
+    await prisma.milestone.upsert({
+      where: { code: m.code },
+      create: m,
+      update: m,
+    });
+  }
+}
+
 async function upsertCompetitorInsights() {
   for (const ci of COMPETITOR_INSIGHTS) {
     const competitor = await prisma.competitor.findUnique({ where: { name: ci.competitorName } });
@@ -664,6 +823,7 @@ async function main(): Promise<void> {
   await upsertConsultingServices();
   await upsertTrainingPrograms();
   await upsertCompetitorInsights();
+  await upsertMilestones();
 
   // eslint-disable-next-line no-console
   console.error(`Seed complete. Admin: ${admin.email} / ${admin.password}`);

@@ -43,6 +43,8 @@ describe('public routes', () => {
     expect(areas).toContain('recommendations');
     expect(areas).toContain('forecasting');
     expect(areas).toContain('alerting');
+    // Project delivery
+    expect(areas).toContain('milestones');
     // Subscription / commercial surfaces
     expect(areas).toContain('subscription-tiers');
     expect(areas).toContain('add-ons');
@@ -100,6 +102,11 @@ describe('auth gates', () => {
     const res = await request(app)
       .post('/api/subscription-tiers')
       .send({ key: 'test', name: 'Test', monthlyPriceCents: 100 });
+    expect(res.status).toBe(401);
+  });
+
+  it('GET /api/milestones without auth → 401', async () => {
+    const res = await request(app).get('/api/milestones');
     expect(res.status).toBe(401);
   });
 });

@@ -181,6 +181,19 @@ const CATALOG = {
       ],
     },
     {
+      area: 'milestones',
+      directive: '/directives/milestones.md',
+      endpoints: [
+        { method: 'GET', path: '/api/milestones', auth: 'milestone.read' },
+        { method: 'GET', path: '/api/milestones/summary', auth: 'milestone.read' },
+        { method: 'GET', path: '/api/milestones/:id', auth: 'milestone.read' },
+        { method: 'POST', path: '/api/milestones', auth: 'milestone.write' },
+        { method: 'PATCH', path: '/api/milestones/:id', auth: 'milestone.write' },
+        { method: 'POST', path: '/api/milestones/:id/transition', auth: 'milestone.write' },
+        { method: 'DELETE', path: '/api/milestones/:id', auth: 'milestone.write' },
+      ],
+    },
+    {
       area: 'subscription-tiers',
       directive: '/directives/subscription_tiers.md',
       endpoints: [

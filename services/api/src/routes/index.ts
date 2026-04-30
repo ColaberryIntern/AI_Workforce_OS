@@ -33,6 +33,7 @@ import {
   partnershipsRouter,
   competitorInsightsRouter,
 } from '../domains/subscription/subscription.routes.js';
+import { milestonesRouter } from '../domains/milestones/milestones.routes.js';
 
 /**
  * Top-level API router. Mounts every domain at the Build-Guide-spec path.
@@ -85,6 +86,9 @@ rootRouter.use('/audit', auditRouter);
 rootRouter.use('/performance', performanceMonitoringRouter);
 rootRouter.use('/model/monitor', modelMonitoringRouter);
 rootRouter.use('/alerts', alertingRouter);
+
+// Project delivery (Build Guide §10 §Milestone Definitions)
+rootRouter.use('/milestones', milestonesRouter);
 
 // Subscription / commercial (Build Guide §1 Business Model + §10 GTM)
 rootRouter.use('/subscription-tiers', subscriptionTiersRouter);
