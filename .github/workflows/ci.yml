@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Lint, typecheck, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NODE_ENV: test
+      JWT_SECRET: ci-test-secret-at-least-16-chars
+      DATABASE_URL: postgres://test:test@localhost:5432/test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --workspaces --include-workspace-root
+
+      - name: Generate Prisma client
+        working-directory: services/api
+        env:
+          DATABASE_URL: postgres://placeholder:placeholder@localhost:5432/placeholder
+        run: npx prisma generate
+
+      - name: Validate Prisma schema
+        working-directory: services/api
+        env:
+          DATABASE_URL: postgres://placeholder:placeholder@localhost:5432/placeholder
+        run: npx prisma validate
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test

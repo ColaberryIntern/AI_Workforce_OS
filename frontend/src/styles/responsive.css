@@ -1,0 +1,60 @@
+/* WCAG 2.1 AA + responsive baseline.
+   Source: CLAUDE.md §Accessibility. */
+
+*:focus-visible {
+  outline: 3px solid var(--color-primary-light);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+@media (max-width: 992px) {
+  .btn,
+  .nav-link,
+  .form-control,
+  .form-select,
+  a {
+    min-height: 44px;
+  }
+  .btn-sm { min-height: 36px; padding: 0.4rem 0.75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-contrast: high) {
+  body { color: #000; background: #fff; }
+  .card, .btn, .form-control, .form-select { border: 2px solid currentColor !important; }
+  .muted, .text-muted, .text-light { color: #000 !important; }
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-primary);
+  color: #fff;
+  padding: var(--space-2) var(--space-4);
+  z-index: 1000;
+  text-decoration: none;
+  border-radius: 0 0 var(--radius-md) 0;
+}
+
+.skip-link:focus { top: 0; color: #fff; }

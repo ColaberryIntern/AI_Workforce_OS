@@ -1,0 +1,25 @@
+{
+  "name": "ai-workforce-os",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI Workforce Operating System — root workspace",
+  "workspaces": [
+    "services/api",
+    "services/worker",
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "api:dev": "npm run dev --workspace services/api",
+    "worker:dev": "npm run dev --workspace services/worker",
+    "frontend:dev": "npm run dev --workspace frontend",
+    "prisma:generate": "npm run prisma:generate --workspace services/api",
+    "prisma:validate": "npm run prisma:validate --workspace services/api"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

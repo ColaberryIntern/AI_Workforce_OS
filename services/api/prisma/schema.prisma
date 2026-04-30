@@ -1,0 +1,414 @@
+// Prisma schema for AI Workforce OS
+// Spec: Build Guide ch.4 (Functional Requirements) + ch.7 (Data Model)
+// Directive: /directives/data_model.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// Identity & Access (Build Guide §4 #1, #8 + §8 Auth)
+// =============================================================================
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  roleAssignments       RoleAssignment[]
+  refreshTokens         RefreshToken[]
+  notifications         Notification[]
+  notificationPreferences NotificationPreference[]
+  staffingEvents        StaffingEvent[]
+  recommendations       Recommendation[]
+  auditLogs             AuditLog[]
+  analyticsEvents       AnalyticsEvent[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  // Hierarchy: parent role inherits permissions from this child
+  parentId    String?
+  parent      Role?    @relation("RoleHierarchy", fields: [parentId], references: [id])
+  children    Role[]   @relation("RoleHierarchy")
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  permissions     RolePermission[]
+  roleAssignments RoleAssignment[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String  @id @default(cuid())
+  key         String  @unique
+  description String?
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model RoleAssignment {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, roleId])
+  @@map("role_assignments")
+}
+
+model RefreshToken {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique // sha256 of the opaque token; raw never stored
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  replacedBy String?  // id of the next token in a rotation chain
+  createdAt  DateTime @default(now())
+
+  @@index([userId, revokedAt])
+  @@map("refresh_tokens")
+}
+
+// =============================================================================
+// Staffing Events & Recommendations (Build Guide §4 #2, #11, #12 + §7)
+// =============================================================================
+
+model StaffingEvent {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  eventType  String   // 'shortage' | 'surplus' | 'schedule_change' | 'shift_swap' | ...
+  location   String?
+  payload    Json
+  occurredAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  recommendations Recommendation[]
+
+  @@index([eventType, occurredAt])
+  @@map("staffing_events")
+}
+
+model Recommendation {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  staffingEventId String?
+  staffingEvent   StaffingEvent? @relation(fields: [staffingEventId], references: [id], onDelete: SetNull)
+  kind            String   // 'allocation' | 'hire' | 'reschedule' | 'training' | ...
+  payload         Json
+  confidence      Float    // [0, 1]
+  modelName       String
+  modelVersion    String
+  accepted        Boolean? // null = pending, true = accepted, false = rejected
+  feedback        String?
+  createdAt       DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("recommendations")
+}
+
+model Forecast {
+  id           String   @id @default(cuid())
+  scope        String   // 'global' | 'team:<id>' | 'location:<id>'
+  horizonDays  Int
+  modelName    String
+  modelVersion String
+  payload      Json     // forecasted values
+  ciLower      Json     // lower confidence interval
+  ciUpper      Json     // upper confidence interval
+  generatedAt  DateTime @default(now())
+
+  @@index([scope, generatedAt])
+  @@map("forecasts")
+}
+
+// =============================================================================
+// Notifications & Webhooks (Build Guide §4 #3, #5)
+// =============================================================================
+
+model Notification {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel    String   // 'email' | 'in_app' | 'sms'
+  eventType  String
+  subject    String?
+  body       String   // may be encrypted (v1: prefix) per /directives/encryption.md
+  status     String   // 'pending' | 'sent' | 'failed' | 'skipped'
+  attempts   Int      @default(0)
+  lastError  String?
+  sentAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, status])
+  @@index([status, createdAt])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel   String
+  eventType String?  // null = all event types
+  enabled   Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, channel, eventType])
+  @@map("notification_preferences")
+}
+
+model Webhook {
+  id         String   @id @default(cuid())
+  url        String
+  events     String[] // event types subscribed
+  secret     String   // HMAC secret (returned once at registration; stored encrypted)
+  isActive   Boolean  @default(true)
+  failures   Int      @default(0) // consecutive delivery failures
+  disabledAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  deliveries WebhookDelivery[]
+
+  @@map("webhooks")
+}
+
+model WebhookDelivery {
+  id            String   @id @default(cuid())
+  webhookId     String
+  webhook       Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  eventType     String
+  payload       Json
+  status        String   // 'pending' | 'success' | 'failed'
+  attempts      Int      @default(0)
+  responseCode  Int?
+  lastError     String?
+  signature     String   // HMAC included in outgoing X-AIWOS-Signature
+  deliveredAt   DateTime?
+  nextAttemptAt DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([webhookId, status])
+  @@index([status, nextAttemptAt])
+  @@map("webhook_deliveries")
+}
+
+// =============================================================================
+// Analytics & Audit (Build Guide §4 #6, #10)
+// =============================================================================
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  eventName  String
+  payload    Json
+  sessionId  String?
+  occurredAt DateTime @default(now())
+
+  @@index([eventName, occurredAt])
+  @@index([sessionId])
+  @@map("analytics_events")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String   // 'role.assign', 'user.login', 'recommendation.accept', etc.
+  resource   String   // 'role:abc', 'user:xyz'
+  metadata   Json
+  ipAddress  String?
+  userAgent  String?
+  occurredAt DateTime @default(now())
+
+  @@index([action, occurredAt])
+  @@index([userId, occurredAt])
+  @@map("audit_logs")
+}
+
+// =============================================================================
+// Performance & Model Monitoring (Build Guide §4 #14, #15)
+// =============================================================================
+
+model ModelMetric {
+  id           String   @id @default(cuid())
+  modelName    String
+  modelVersion String
+  metricName   String   // 'accuracy' | 'precision' | 'recall' | 'drift' | ...
+  metricValue  Float
+  context      Json?
+  recordedAt   DateTime @default(now())
+
+  @@index([modelName, metricName, recordedAt])
+  @@map("model_metrics")
+}
+
+model PerfMetric {
+  id          String   @id @default(cuid())
+  service     String
+  endpoint    String?
+  metricName  String   // 'latency_ms_p95' | 'throughput_rps' | 'error_rate' | ...
+  metricValue Float
+  labels      Json?
+  recordedAt  DateTime @default(now())
+
+  @@index([service, metricName, recordedAt])
+  @@map("perf_metrics")
+}
+
+model AlertRule {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  source      String   // 'apm' | 'model' | 'business'
+  metric      String
+  operator    String   // 'gt' | 'gte' | 'lt' | 'lte' | 'eq'
+  threshold   Float
+  windowSecs  Int      @default(300)
+  severity    String   // 'info' | 'warning' | 'critical'
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  alerts Alert[]
+
+  @@map("alert_rules")
+}
+
+model Alert {
+  id             String   @id @default(cuid())
+  ruleId         String?
+  rule           AlertRule? @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+  source         String
+  severity       String   // 'info' | 'warning' | 'critical'
+  title          String
+  description    String
+  status         String   @default("open") // 'open' | 'acknowledged' | 'resolved'
+  triggeredAt    DateTime @default(now())
+  acknowledgedAt DateTime?
+  resolvedAt     DateTime?
+
+  @@index([source, status])
+  @@index([status, triggeredAt])
+  @@map("alerts")
+}
+
+// =============================================================================
+// ETL / Data Pipeline (Build Guide §4 #13)
+// =============================================================================
+
+model EtlJob {
+  id          String   @id @default(cuid())
+  jobType     String
+  sources     String[] // raw data source identifiers
+  status      String   // 'pending' | 'running' | 'success' | 'failed'
+  recordsIn   Int      @default(0)
+  recordsOut  Int      @default(0)
+  errors      Int      @default(0)
+  qualityScore Float?
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([status, createdAt])
+  @@map("etl_jobs")
+}
+
+// =============================================================================
+// Value Proposition Content (marketing/strategy)
+// Spec: Build Guide §1 Vision; §2.4.3; §2.5.1 Value Differentiation Matrix
+// =============================================================================
+
+model ValueProposition {
+  id         String   @id @default(cuid())
+  title      String
+  summary    String
+  audience   String   // 'hr_manager' | 'operations' | 'it_admin' | 'executive' | 'general'
+  orderIndex Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([audience, isActive])
+  @@map("value_propositions")
+}
+
+model Capability {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  orderIndex  Int      @default(0)
+
+  cells MatrixCell[]
+
+  @@map("capabilities")
+}
+
+model Competitor {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  isOwn      Boolean  @default(false)
+  orderIndex Int      @default(0)
+
+  cells MatrixCell[]
+
+  @@map("competitors")
+}
+
+model MatrixCell {
+  capabilityId String
+  competitorId String
+  capability   Capability @relation(fields: [capabilityId], references: [id], onDelete: Cascade)
+  competitor   Competitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+  value        String     // 'YES' | 'NO' | 'LIMITED' | 'HIGH' | 'MEDIUM' | 'LOW'
+  note         String?
+
+  @@id([capabilityId, competitorId])
+  @@map("matrix_cells")
+}
+
+model CompetitiveGap {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  ourAnswer   String
+  orderIndex  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("competitive_gaps")
+}
