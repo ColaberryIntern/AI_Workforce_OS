@@ -2,6 +2,13 @@ import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
+// Preview mode bypass — when VITE_PREVIEW_MODE=true is set at build
+// time (e.g. on a Vercel deploy without a connected backend), render
+// the protected children directly without auth/permission checks. Lets
+// reviewers see the layout of pages without needing a working login
+// loop. Has no effect in production builds where the env var is unset.
+const PREVIEW_MODE = import.meta.env.VITE_PREVIEW_MODE === 'true';
+
 export function RequireAuth({
   children,
   permission,
@@ -13,6 +20,8 @@ export function RequireAuth({
 }) {
   const { user, isLoading, hasPermission, hasRole } = useAuth();
   const location = useLocation();
+
+  if (PREVIEW_MODE) return <>{children}</>;
 
   if (isLoading) {
     return (

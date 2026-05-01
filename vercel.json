@@ -6,7 +6,8 @@
   "build": {
     "env": {
       "NPM_CONFIG_PRODUCTION": "false",
-      "NODE_ENV": "development"
+      "NODE_ENV": "development",
+      "VITE_PREVIEW_MODE": "true"
     }
   },
   "rewrites": [
