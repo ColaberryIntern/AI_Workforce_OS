@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "npm install --production=false",
-  "buildCommand": "npm run build --workspace @aiwos/frontend",
+  "installCommand": "cd frontend && npm install --production=false --no-workspaces",
+  "buildCommand": "cd frontend && npx vite build",
   "outputDirectory": "frontend/dist",
   "build": {
     "env": {
