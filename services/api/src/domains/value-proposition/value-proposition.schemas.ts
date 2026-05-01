@@ -42,9 +42,32 @@ export const competitiveGapCreateSchema = z.object({
 
 export const competitiveGapUpdateSchema = competitiveGapCreateSchema.partial();
 
+// --- CompetitorStrength: industry-wide strengths competitors share + how we
+//     counter them. Pairs with CompetitiveGap to form the customer-acquisition
+//     competitive picture. Build Guide §1 §Competitive Landscape.
+export const competitorStrengthCreateSchema = z.object({
+  title: z.string().min(1).max(200),
+  description: z.string().min(1).max(4000),
+  ourCounter: z.string().min(1).max(4000),
+  orderIndex: z.number().int().min(0).default(0),
+  isActive: z.boolean().default(true),
+});
+
+export const competitorStrengthUpdateSchema = competitorStrengthCreateSchema.partial();
+
+export const competitorStrengthListQuerySchema = z.object({
+  active: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((v) => (v === undefined ? undefined : v === 'true')),
+});
+
 export type ValuePropCreate = z.infer<typeof valuePropCreateSchema>;
 export type ValuePropUpdate = z.infer<typeof valuePropUpdateSchema>;
 export type ValuePropListQuery = z.infer<typeof valuePropListQuerySchema>;
 export type CompetitiveGapCreate = z.infer<typeof competitiveGapCreateSchema>;
 export type CompetitiveGapUpdate = z.infer<typeof competitiveGapUpdateSchema>;
+export type CompetitorStrengthCreate = z.infer<typeof competitorStrengthCreateSchema>;
+export type CompetitorStrengthUpdate = z.infer<typeof competitorStrengthUpdateSchema>;
+export type CompetitorStrengthListQuery = z.infer<typeof competitorStrengthListQuerySchema>;
 export type MatrixCellUpsert = z.infer<typeof matrixCellUpsertSchema>;

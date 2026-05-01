@@ -54,6 +54,12 @@ describe('public routes', () => {
     expect(areas).toContain('marketing-channels');
     expect(areas).toContain('partnerships');
     expect(areas).toContain('competitor-insights');
+    // Build Guide §1 §Competitive Landscape — competitor strengths surface
+    const valueProp = res.body.data.surfaces.find(
+      (s: { area: string }) => s.area === 'value-proposition',
+    );
+    const paths = ((valueProp?.endpoints ?? []) as Array<{ path: string }>).map((e) => e.path);
+    expect(paths).toContain('/api/competitor-strengths');
   });
 
   it('POST /api/services → returns service catalog', async () => {

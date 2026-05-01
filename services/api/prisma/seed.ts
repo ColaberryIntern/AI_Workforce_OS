@@ -214,6 +214,46 @@ const COMPETITIVE_GAPS = [
     ourAnswer: 'Automated schedule adjustments based on real-time signals + AI recommendations.',
     orderIndex: 3,
   },
+  {
+    title: 'High pricing structures deter smaller organizations',
+    description:
+      'Incumbent workforce systems carry six-figure ACV minimums and long implementation cycles. Smaller orgs cannot afford the entry ticket and end up under-served.',
+    ourAnswer:
+      'Tiered pricing — Basic / Professional / Enterprise from $29/mo per user. 14-day free trial. No mandatory implementation services for the Basic tier.',
+    orderIndex: 4,
+  },
+];
+
+// Industry-wide competitor strengths + how we counter them.
+// Build Guide §1 §Competitive Landscape — "Strengths of Competitors".
+const COMPETITOR_STRENGTHS = [
+  {
+    title: 'Established brand recognition and customer loyalty',
+    description:
+      'Incumbents like Workday, Kronos, and ADP have decades of trust in HR/payroll. SMBs and enterprises default to known brands when evaluating vendors.',
+    ourCounter:
+      'Lead with measurable ROI (cost saved, schedule efficiency) and reference customer outcomes. Pair fast product velocity with compliance + audit posture so we feel "safe" too.',
+    orderIndex: 0,
+    isActive: true,
+  },
+  {
+    title: 'Comprehensive feature sets that cover various HR functions',
+    description:
+      'Suites like Workday cover payroll, benefits, time, scheduling, and learning. Buyers fear "another tool" and prefer single-vendor consolidation.',
+    ourCounter:
+      'Position as the AI workforce intelligence layer — integrates with existing HRIS via webhooks + API. We do not replace the suite; we make the rest of it smarter.',
+    orderIndex: 1,
+    isActive: true,
+  },
+  {
+    title: 'Strong compliance and security measures',
+    description:
+      'Established vendors hold SOC 2, GDPR/CCPA posture, and audit certifications. Buyers in regulated industries treat these as table stakes.',
+    ourCounter:
+      'Match table stakes from day one — RBAC + permission inheritance, AES-256 encryption at rest, append-only audit log, encryption in transit. Roadmap SOC 2 alongside MVP launch.',
+    orderIndex: 2,
+    isActive: true,
+  },
 ];
 
 async function upsertPermissions() {
@@ -325,6 +365,16 @@ async function upsertCompetitiveGaps() {
     } else {
       await prisma.competitiveGap.create({ data: g });
     }
+  }
+}
+
+async function upsertCompetitorStrengths() {
+  for (const s of COMPETITOR_STRENGTHS) {
+    await prisma.competitorStrength.upsert({
+      where: { title: s.title },
+      create: s,
+      update: s,
+    });
   }
 }
 
@@ -813,6 +863,7 @@ async function main(): Promise<void> {
   await upsertValuePropositions();
   await upsertMatrix();
   await upsertCompetitiveGaps();
+  await upsertCompetitorStrengths();
 
   // Subscription / commercial
   await upsertSubscriptionTiers();

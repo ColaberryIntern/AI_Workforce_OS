@@ -414,6 +414,24 @@ model CompetitiveGap {
   @@map("competitive_gaps")
 }
 
+model CompetitorStrength {
+  // Industry-wide strengths competitors share + how we counter them.
+  // Pairs with CompetitiveGap (industry-wide weaknesses + our answer) to form
+  // the customer-acquisition competitive picture.
+  // Build Guide §1 §Competitive Landscape — "Strengths of Competitors".
+  id          String   @id @default(cuid())
+  title       String   @unique
+  description String
+  ourCounter  String
+  orderIndex  Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, orderIndex])
+  @@map("competitor_strengths")
+}
+
 // =============================================================================
 // Subscription & Commercial (Build Guide §1 Business Model + §10 GTM)
 // Spec: /directives/subscription_tiers.md

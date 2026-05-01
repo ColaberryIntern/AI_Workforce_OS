@@ -9,6 +9,9 @@ import {
   matrixCellParamSchema,
   competitiveGapCreateSchema,
   competitiveGapUpdateSchema,
+  competitorStrengthCreateSchema,
+  competitorStrengthUpdateSchema,
+  competitorStrengthListQuerySchema,
 } from './value-proposition.schemas.js';
 import { validateBody, validateQuery, validateParams } from '../../middleware/validate.js';
 import { requireAuth } from '../../middleware/requireAuth.js';
@@ -21,6 +24,7 @@ import { ok } from '../../lib/envelope.js';
 export const valuePropositionsRouter = Router();
 export const differentiationMatrixRouter = Router();
 export const competitiveGapsRouter = Router();
+export const competitorStrengthsRouter = Router();
 
 const service = new ValuePropositionService(getPrisma());
 
@@ -140,6 +144,58 @@ competitiveGapsRouter.delete(
   audit('competitive_gap.delete', (req) => `competitive_gap:${(req.params as { id: string }).id}`),
   async (req, res) => {
     await service.deleteGap((req.params as { id: string }).id);
+    res.status(204).send();
+  },
+);
+
+// --- Competitor strengths (industry-wide + our counter) ---
+
+competitorStrengthsRouter.get('/', validateQuery(competitorStrengthListQuerySchema), async (req, res) => {
+  const items = await service.listStrengths(req.query as never);
+  res.json(ok(items, { count: items.length }));
+});
+
+competitorStrengthsRouter.get('/:id', validateParams(idParamSchema), async (req, res) => {
+  const item = await service.getStrength((req.params as { id: string }).id);
+  res.json(ok(item));
+});
+
+competitorStrengthsRouter.post(
+  '/',
+  requireAuth,
+  requirePermission('content.write'),
+  validateBody(competitorStrengthCreateSchema),
+  audit(
+    'competitor_strength.create',
+    (req) => `competitor_strength:${(req.body as { title: string }).title}`,
+  ),
+  async (req, res) => {
+    const created = await service.createStrength(req.body);
+    res.status(201).json(ok(created));
+  },
+);
+
+competitorStrengthsRouter.patch(
+  '/:id',
+  requireAuth,
+  requirePermission('content.write'),
+  validateParams(idParamSchema),
+  validateBody(competitorStrengthUpdateSchema),
+  audit('competitor_strength.update', (req) => `competitor_strength:${(req.params as { id: string }).id}`),
+  async (req, res) => {
+    const updated = await service.updateStrength((req.params as { id: string }).id, req.body);
+    res.json(ok(updated));
+  },
+);
+
+competitorStrengthsRouter.delete(
+  '/:id',
+  requireAuth,
+  requirePermission('content.write'),
+  validateParams(idParamSchema),
+  audit('competitor_strength.delete', (req) => `competitor_strength:${(req.params as { id: string }).id}`),
+  async (req, res) => {
+    await service.deleteStrength((req.params as { id: string }).id);
     res.status(204).send();
   },
 );

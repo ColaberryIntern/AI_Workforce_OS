@@ -22,18 +22,32 @@ interface Gap {
   ourAnswer: string;
 }
 
+interface Strength {
+  id: string;
+  title: string;
+  description: string;
+  ourCounter: string;
+}
+
 export function ValuePropositionPage() {
   const [items, setItems] = useState<VP[] | null>(null);
   const [matrix, setMatrix] = useState<Matrix | null>(null);
   const [gaps, setGaps] = useState<Gap[] | null>(null);
+  const [strengths, setStrengths] = useState<Strength[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([valueProp.list(), valueProp.matrix(), valueProp.gaps()])
-      .then(([vps, m, g]) => {
+    Promise.all([
+      valueProp.list(),
+      valueProp.matrix(),
+      valueProp.gaps(),
+      valueProp.strengths(),
+    ])
+      .then(([vps, m, g, s]) => {
         setItems(vps);
         setMatrix(m);
         setGaps(g);
+        setStrengths(s);
       })
       .catch((err) => setError(err.message));
   }, []);
@@ -102,6 +116,35 @@ export function ValuePropositionPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+      </section>
+
+      <section className="mb-5">
+        <h2 className="h5 mb-3">How competitors compete (and how we counter)</h2>
+        <p className="muted small mb-3">
+          What incumbents do well, and how we acquire customers anyway.
+        </p>
+        {strengths === null && !error && <Loading label="Loading competitor strengths" />}
+        {strengths && strengths.length === 0 && (
+          <EmptyState message="No competitor strengths recorded yet." />
+        )}
+        {strengths && strengths.length > 0 && (
+          <div className="row g-3">
+            {strengths.map((s) => (
+              <div key={s.id} className="col-md-6">
+                <div className="card border-0 shadow-sm h-100">
+                  <div className="card-body">
+                    <span className="badge bg-warning text-dark mb-2">Competitor strength</span>
+                    <h3 className="h6 mb-2">{s.title}</h3>
+                    <p className="muted small mb-2">{s.description}</p>
+                    <p className="mb-0">
+                      <strong>Our counter:</strong> {s.ourCounter}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>

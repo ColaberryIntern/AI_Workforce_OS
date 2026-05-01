@@ -13,7 +13,8 @@ Read-mostly content service for value-prop / differentiation matrix / competitiv
 |---|---|
 | `ValueProposition` | Per-audience benefit statement |
 | `Capability` × `Competitor` × `MatrixCell` | Differentiation matrix |
-| `CompetitiveGap` | Gap our solution closes |
+| `CompetitiveGap` | Industry-wide weakness — gap our solution closes |
+| `CompetitorStrength` | Industry-wide strength competitors share — and how we counter it (Build Guide §1 §Competitive Landscape) |
 
 ## API
 
@@ -30,8 +31,13 @@ Read-mostly content service for value-prop / differentiation matrix / competitiv
 | POST   | `/api/competitive-gaps` | content.write | create |
 | PATCH  | `/api/competitive-gaps/:id` | content.write | update |
 | DELETE | `/api/competitive-gaps/:id` | content.write | delete |
+| GET    | `/api/competitor-strengths` | public | list (filter `?active=true`) |
+| GET    | `/api/competitor-strengths/:id` | public | get |
+| POST   | `/api/competitor-strengths` | content.write | create (409 on duplicate `title`) |
+| PATCH  | `/api/competitor-strengths/:id` | content.write | update |
+| DELETE | `/api/competitor-strengths/:id` | content.write | delete |
 
 ## Verification
 
-- Unit: service filter + ordering + NotFound
+- Unit: service filter + ordering + NotFound; CompetitorStrength duplicate-title → Conflict
 - Integration: full CRUD on each resource; auth gates respected; matrix shape `{ capabilities, competitors, cells }`

@@ -76,6 +76,11 @@ const CATALOG = {
         { method: 'POST', path: '/api/competitive-gaps', auth: 'content.write' },
         { method: 'PATCH', path: '/api/competitive-gaps/:id', auth: 'content.write' },
         { method: 'DELETE', path: '/api/competitive-gaps/:id', auth: 'content.write' },
+        { method: 'GET', path: '/api/competitor-strengths', auth: 'public' },
+        { method: 'GET', path: '/api/competitor-strengths/:id', auth: 'public' },
+        { method: 'POST', path: '/api/competitor-strengths', auth: 'content.write' },
+        { method: 'PATCH', path: '/api/competitor-strengths/:id', auth: 'content.write' },
+        { method: 'DELETE', path: '/api/competitor-strengths/:id', auth: 'content.write' },
       ],
     },
     {

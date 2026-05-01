@@ -6,8 +6,11 @@ import type {
   MatrixCellUpsert,
   CompetitiveGapCreate,
   CompetitiveGapUpdate,
+  CompetitorStrengthCreate,
+  CompetitorStrengthUpdate,
+  CompetitorStrengthListQuery,
 } from './value-proposition.schemas.js';
-import { NotFoundError } from '../../lib/errors.js';
+import { ConflictError, NotFoundError } from '../../lib/errors.js';
 
 export class ValuePropositionService {
   constructor(private readonly db: PrismaClient) {}
@@ -85,5 +88,37 @@ export class ValuePropositionService {
     const found = await this.db.competitiveGap.findUnique({ where: { id } });
     if (!found) throw new NotFoundError(`Competitive gap ${id} not found`);
     await this.db.competitiveGap.delete({ where: { id } });
+  }
+
+  // --- CompetitorStrength: industry-wide competitor strengths + our counter.
+  // Build Guide §1 §Competitive Landscape — "Strengths of Competitors".
+
+  listStrengths(filter: CompetitorStrengthListQuery) {
+    return this.db.competitorStrength.findMany({
+      where: { ...(filter.active !== undefined ? { isActive: filter.active } : {}) },
+      orderBy: [{ orderIndex: 'asc' }, { createdAt: 'asc' }],
+    });
+  }
+
+  async getStrength(id: string) {
+    const found = await this.db.competitorStrength.findUnique({ where: { id } });
+    if (!found) throw new NotFoundError(`Competitor strength ${id} not found`);
+    return found;
+  }
+
+  async createStrength(data: CompetitorStrengthCreate) {
+    const existing = await this.db.competitorStrength.findUnique({ where: { title: data.title } });
+    if (existing) throw new ConflictError(`Competitor strength '${data.title}' already exists`);
+    return this.db.competitorStrength.create({ data });
+  }
+
+  async updateStrength(id: string, data: CompetitorStrengthUpdate) {
+    await this.getStrength(id);
+    return this.db.competitorStrength.update({ where: { id }, data });
+  }
+
+  async deleteStrength(id: string) {
+    await this.getStrength(id);
+    await this.db.competitorStrength.delete({ where: { id } });
   }
 }

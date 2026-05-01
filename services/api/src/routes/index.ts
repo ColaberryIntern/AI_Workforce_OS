@@ -10,6 +10,7 @@ import {
   valuePropositionsRouter,
   differentiationMatrixRouter,
   competitiveGapsRouter,
+  competitorStrengthsRouter,
 } from '../domains/value-proposition/value-proposition.routes.js';
 import { apiAccessRouter } from '../domains/api-access/api-access.routes.js';
 import { microservicesRouter } from '../domains/microservices/microservices.routes.js';
@@ -56,6 +57,7 @@ rootRouter.use('/access', rbacRouter);
 rootRouter.use('/value-propositions', valuePropositionsRouter);
 rootRouter.use('/differentiation-matrix', differentiationMatrixRouter);
 rootRouter.use('/competitive-gaps', competitiveGapsRouter);
+rootRouter.use('/competitor-strengths', competitorStrengthsRouter);
 
 // AI plane (longer prefix first)
 rootRouter.use('/recommendations/system', recommenderRouter);

@@ -15,6 +15,17 @@ export const valueProp = {
     apiFetch<Array<{ id: string; title: string; description: string; ourAnswer: string }>>(
       '/competitive-gaps',
     ),
+  strengths: () =>
+    apiFetch<
+      Array<{
+        id: string;
+        title: string;
+        description: string;
+        ourCounter: string;
+        orderIndex: number;
+        isActive: boolean;
+      }>
+    >('/competitor-strengths?active=true'),
 };
 
 export const roles = {
