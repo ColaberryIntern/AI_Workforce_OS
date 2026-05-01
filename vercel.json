@@ -1,9 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "vite",
-  "installCommand": "npm install --production=false --no-workspaces",
-  "buildCommand": "npx vite build",
-  "outputDirectory": "dist",
+  "installCommand": "npm install --prefix frontend --production=false",
+  "buildCommand": "frontend/node_modules/.bin/vite build frontend",
+  "outputDirectory": "frontend/dist",
   "build": {
     "env": {
       "NPM_CONFIG_PRODUCTION": "false",
