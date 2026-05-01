@@ -1,9 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "npm install --include=dev",
+  "installCommand": "npm install --production=false",
   "buildCommand": "npm run build --workspace @aiwos/frontend",
   "outputDirectory": "frontend/dist",
+  "build": {
+    "env": {
+      "NPM_CONFIG_PRODUCTION": "false",
+      "NODE_ENV": "development"
+    }
+  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
