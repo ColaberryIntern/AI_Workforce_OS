@@ -4,7 +4,35 @@ import type {
   RoleUpdate,
   AssignRoleInput,
 } from './role-management.schemas.js';
-import { ConflictError, NotFoundError, BadRequestError } from '../../lib/errors.js';
+import { ConflictError, ForbiddenError, NotFoundError, BadRequestError } from '../../lib/errors.js';
+
+/**
+ * Permission keys whose removal from `admin` (or any system role currently
+ * holding them) would lock the workspace out of role administration.
+ * Spec: Build Guide §4 #8 §Edge Cases — "Attempting to remove permissions
+ * from an admin role should return a specific error message."
+ */
+export const PROTECTED_ADMIN_PERMS = ['permission.write', 'role.write', 'role.assign'];
+
+/**
+ * Throw ForbiddenError if `nextKeys` would strip any protected core
+ * permission from the named system role. Safe to call on any role —
+ * only `admin` and other isSystem roles trigger the check.
+ */
+export function assertProtectedAdminPermsIntact(
+  role: { name: string; isSystem: boolean },
+  nextKeys: string[],
+): void {
+  if (role.name !== 'admin' && !role.isSystem) return;
+  const next = new Set(nextKeys);
+  const missing = PROTECTED_ADMIN_PERMS.filter((k) => !next.has(k));
+  if (missing.length > 0) {
+    throw new ForbiddenError(
+      `Cannot remove core permissions [${missing.join(', ')}] from system role '${role.name}' — ` +
+        'doing so would lock the workspace out of role administration.',
+    );
+  }
+}
 
 /**
  * Role-management service. Spec: /directives/role_management.md.
@@ -104,7 +132,11 @@ export class RoleManagementService {
   }
 
   async setRolePermissions(roleId: string, permissionKeys: string[]) {
-    await this.getRole(roleId);
+    const role = await this.getRole(roleId);
+    // Guard: never let the admin/system role drop the keys needed to
+    // re-administer roles. Build Guide §4 #8 §Edge Cases.
+    assertProtectedAdminPermsIntact(role, permissionKeys);
+
     if (permissionKeys.length > 0) {
       const permissions = await this.db.permission.findMany({
         where: { key: { in: permissionKeys } },

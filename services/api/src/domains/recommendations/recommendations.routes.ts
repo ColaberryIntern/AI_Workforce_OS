@@ -43,6 +43,17 @@ recommendationsRouter.get(
   },
 );
 
+// MUST be registered before `/:id` so the param route doesn't capture it.
+recommendationsRouter.get(
+  '/feedback-stats',
+  requirePermission('recommendation.read'),
+  async (req, res) => {
+    const isAdmin = (req.user!.permissions ?? []).includes('recommendation.write');
+    const stats = await service.feedbackStats(req.user!.userId, isAdmin);
+    res.json(ok(stats));
+  },
+);
+
 recommendationsRouter.get(
   '/:id',
   requirePermission('recommendation.read'),

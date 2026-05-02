@@ -7,6 +7,7 @@ import { validateBody } from '../../middleware/validate.js';
 import { audit } from '../../middleware/auditLog.js';
 import { ok } from '../../lib/envelope.js';
 import { NotFoundError } from '../../lib/errors.js';
+import { assertProtectedAdminPermsIntact } from '../role-management/role-management.service.js';
 
 /**
  * RBAC composite endpoint. Spec: /directives/rbac.md.
@@ -42,6 +43,14 @@ rbacRouter.post(
 
     const user = await db.user.findUnique({ where: { id: body.userId } });
     if (!user) throw new NotFoundError(`User ${body.userId} not found`);
+
+    // Pre-flight guard: refuse if any setRolePermissions request would strip
+    // core admin permissions from a system role. Build Guide §4 #8 §Edge Cases.
+    for (const set of body.setRolePermissions ?? []) {
+      const role = await db.role.findUnique({ where: { id: set.roleId } });
+      if (!role) throw new NotFoundError(`Role ${set.roleId} not found`);
+      assertProtectedAdminPermsIntact(role, set.permissionKeys);
+    }
 
     await db.$transaction(async (tx) => {
       // Add role assignments

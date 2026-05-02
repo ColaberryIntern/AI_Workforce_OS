@@ -39,6 +39,7 @@ The set is baked into the JWT claim. New permissions take effect on next token i
 - Token expired → 401 `TOKEN_EXPIRED`
 - Cycle in parent graph → broken at depth 16 (safety net), logged as warning
 - Inactive user → mandate token re-issuance (out of scope this phase; revocation list = Phase 4 candidate)
+- **Removing core permissions from an admin/system role** → 403 `FORBIDDEN` with a specific message. The keys `permission.write`, `role.write`, and `role.assign` are protected on any role named `admin` or with `isSystem=true`. Without these, the workspace would be locked out of role administration. The guard fires from both `setRolePermissions` and the composite `POST /api/access` endpoint. Build Guide §4 #8 §Edge Cases.
 
 ## Verification
 

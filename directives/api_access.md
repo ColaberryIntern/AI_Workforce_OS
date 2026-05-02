@@ -19,7 +19,38 @@ Provide a discoverable RESTful API surface. The Build Guide §4 #4 specifies `GE
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| GET | `/api/data` | public | Catalog: list every feature endpoint + method + auth requirement |
+| GET | `/api/data` | public | Catalog: list every feature endpoint + method + auth requirement. Optional `?area=<name>` filter. |
+
+### Request params (Build Guide §4 #4 §I/O)
+
+`requestParams: Object (optional)`:
+- `area` (string, optional) — when provided, return only the surface whose
+  `area` matches exactly. Empty surfaces array when no match (200, never 404).
+
+### Response shape
+
+`responseData: Object`:
+
+```
+{
+  "data": {
+    "apiVersion": "v1",
+    "baseUrl": "/api",
+    "surfaces": [ { area, directive, endpoints: [ { method, path, auth } ] } ]
+  },
+  "meta": { "area": "<filter>", "matched": <count> }   // only when ?area is set
+}
+```
+
+### Error handling
+
+- Unsupported HTTP method → 404 NOT_FOUND (envelope shape: `{ "error": { "code", "message" } }`)
+- Generic envelope for 4xx/5xx — `error: String (if applicable)` per Build Guide §4 #4
+
+## Edge cases
+
+- `?area=` provided but no surface matches → 200 with empty `surfaces` array (not 404)
+- Missing or malformed query string → treated as no filter
 
 ## Versioning
 
@@ -29,5 +60,6 @@ Provide a discoverable RESTful API surface. The Build Guide §4 #4 specifies `GE
 ## Verification
 
 - Smoke: catalog includes every Build-Guide-spec path that's mounted
+- Smoke: `?area=auth` returns only the auth surface
 - Contract: 4xx/5xx always return the canonical error envelope
 - Rate limit: triggers 429 after configured threshold

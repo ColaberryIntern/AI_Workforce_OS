@@ -93,6 +93,7 @@ const CATALOG = {
         { method: 'POST', path: '/api/recommendations/:id/accept', auth: 'recommendation.write' },
         { method: 'POST', path: '/api/recommendations/:id/reject', auth: 'recommendation.write' },
         { method: 'POST', path: '/api/recommendations/system', auth: 'recommendation.read' },
+        { method: 'GET', path: '/api/recommendations/feedback-stats', auth: 'recommendation.read' },
       ],
     },
     {
@@ -289,6 +290,19 @@ const CATALOG = {
   ],
 };
 
-apiAccessRouter.get('/', (_req, res) => {
-  res.json(ok(CATALOG));
+apiAccessRouter.get('/', (req, res) => {
+  // Optional `?area=<name>` filter — Build Guide §4 #4 §Input/Output:
+  //   `requestParams: Object (optional)` → `responseData: Object`
+  // When `area` is provided, return only the matching surface (or an empty
+  // surfaces array if no match — never 404).
+  const area = typeof req.query.area === 'string' ? req.query.area : undefined;
+  if (!area) {
+    res.json(ok(CATALOG));
+    return;
+  }
+  const filtered = {
+    ...CATALOG,
+    surfaces: CATALOG.surfaces.filter((s) => s.area === area),
+  };
+  res.json(ok(filtered, { area, matched: filtered.surfaces.length }));
 });

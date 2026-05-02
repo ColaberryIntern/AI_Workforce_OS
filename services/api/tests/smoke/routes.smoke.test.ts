@@ -67,6 +67,21 @@ describe('public routes', () => {
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body.data.services)).toBe(true);
   });
+
+  it('GET /api/data?area=auth → returns only the auth surface', async () => {
+    const res = await request(app).get('/api/data?area=auth');
+    expect(res.status).toBe(200);
+    expect(res.body.data.surfaces).toHaveLength(1);
+    expect(res.body.data.surfaces[0].area).toBe('auth');
+    expect(res.body.meta.matched).toBe(1);
+  });
+
+  it('GET /api/data?area=nonexistent → 200 with empty surfaces (not 404)', async () => {
+    const res = await request(app).get('/api/data?area=nonexistent');
+    expect(res.status).toBe(200);
+    expect(res.body.data.surfaces).toEqual([]);
+    expect(res.body.meta.matched).toBe(0);
+  });
 });
 
 describe('auth gates', () => {
@@ -113,6 +128,11 @@ describe('auth gates', () => {
 
   it('GET /api/milestones without auth → 401', async () => {
     const res = await request(app).get('/api/milestones');
+    expect(res.status).toBe(401);
+  });
+
+  it('GET /api/recommendations/feedback-stats without auth → 401', async () => {
+    const res = await request(app).get('/api/recommendations/feedback-stats');
     expect(res.status).toBe(401);
   });
 });
