@@ -34,6 +34,7 @@ const PERMISSIONS = [
   // Operations
   { key: 'pipeline.run', description: 'Trigger ETL jobs' },
   { key: 'monitoring.read', description: 'Read perf and model metrics' },
+  { key: 'monitoring.write', description: 'Ingest perf metrics' },
   { key: 'alert.write', description: 'Manage alert rules' },
   // Content
   { key: 'content.read', description: 'Read value-prop / matrix / gap content' },
@@ -64,6 +65,7 @@ const ROLES = [
       'notification.read',
       'analytics.read',
       'monitoring.read',
+      'monitoring.write',
       'content.read',
       'milestone.read',
       'milestone.write',

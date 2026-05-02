@@ -60,6 +60,12 @@ describe('public routes', () => {
     );
     const paths = ((valueProp?.endpoints ?? []) as Array<{ path: string }>).map((e) => e.path);
     expect(paths).toContain('/api/competitor-strengths');
+    // Build Guide §4 #14 — performance metrics ingest surface
+    const perf = res.body.data.surfaces.find(
+      (s: { area: string }) => s.area === 'performance-monitoring',
+    );
+    const perfPaths = ((perf?.endpoints ?? []) as Array<{ path: string }>).map((e) => e.path);
+    expect(perfPaths).toContain('/api/performance/metrics');
   });
 
   it('POST /api/services → returns service catalog', async () => {
@@ -133,6 +139,20 @@ describe('auth gates', () => {
 
   it('GET /api/recommendations/feedback-stats without auth → 401', async () => {
     const res = await request(app).get('/api/recommendations/feedback-stats');
+    expect(res.status).toBe(401);
+  });
+
+  it('POST /api/data/pipeline without auth → 401', async () => {
+    const res = await request(app)
+      .post('/api/data/pipeline')
+      .send({ jobType: 'custom', sources: ['hris:workday'] });
+    expect(res.status).toBe(401);
+  });
+
+  it('POST /api/performance/metrics without auth → 401', async () => {
+    const res = await request(app)
+      .post('/api/performance/metrics')
+      .send({ service: 'svc', metricName: 'latency_ms_p95', metricValue: 100 });
     expect(res.status).toBe(401);
   });
 });

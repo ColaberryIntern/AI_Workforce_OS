@@ -149,7 +149,10 @@ const CATALOG = {
     {
       area: 'performance-monitoring',
       directive: '/directives/performance_monitoring.md',
-      endpoints: [{ method: 'GET', path: '/api/performance', auth: 'monitoring.read' }],
+      endpoints: [
+        { method: 'GET', path: '/api/performance', auth: 'monitoring.read' },
+        { method: 'POST', path: '/api/performance/metrics', auth: 'monitoring.write' },
+      ],
     },
     {
       area: 'model-monitoring',
